@@ -9,6 +9,22 @@ from config import RECORD_LENGTH, BATCH_SIZE
 # Make numpy values easier to read.
 np.set_printoptions(precision=3, suppress=True)
 
+# Setup GPU
+print("Number of GPUs available: {}".format(len(tf.config.experimental.list_physical_devices("GPU"))))
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only use the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
+    )
+    logical_gpus = tf.config.experimental.list_logical_devices("GPU")
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical PGUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
+
 
 # Dataset from csv
 LABEL_COLUMN = "label"
@@ -298,4 +314,4 @@ for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
         " | Actual outcome: ",
         ("REAL" if bool(survived) else "ADDITIONAL"))
 
-model.save_weights("./checkpoints/cnn-v2")
+model.save_weights("./checkpoints/cnn-inceptions")
