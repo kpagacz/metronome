@@ -222,53 +222,58 @@ model.save_weights("./checkpoints/cnn-v2")
 # CNN - inceptions
 ###########
 # TODO (konrad.pagacz@gmail.com) go back to the DenseFeatures and figure out a way to use it
-feature_layer_inputs = []
-for header in NUMERIC_FEATURES:
-  feature_layer_inputs[header] = tf.keras.Input(shape=(1,), name=header)
+feature_layer_inputs = {}
+for header in ["numeric"]:
+  feature_layer_inputs[header] = tf.keras.Input(shape=(14,), name=header)
+
+PADDING = "same"
 
 def InceptionLayer(layer, filters):
     # 1 kernel
     path1 = tf.keras.layers.Conv1D(filters[0], kernel_size=1, activation="relu")(layer)
 
     # 2 kernel
-    path2 = tf.keras.layers.Conv1D(filters[1][0], kernel_size=1, activation="relu")(layer)
-    path2 = tf.keras.layers.Conv1D(filters[1][1], kernel_size=2, activation="relu")(path2)
+    path2 = tf.keras.layers.Conv1D(filters[1][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+    path2 = tf.keras.layers.Conv1D(filters[1][1], kernel_size=2, activation="relu", padding=PADDING)(path2)
 
     # 3 kernel
-    path3 = tf.keras.layers.Conv1D(filters[2][0], kernel_size=1, activation="relu")(layer)
-    path3 = tf.keras.layers.Conv1D(filters[2][1], kernel_size=3, activation="relu")(path3)
+    path3 = tf.keras.layers.Conv1D(filters[2][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+    path3 = tf.keras.layers.Conv1D(filters[2][1], kernel_size=3, activation="relu", padding=PADDING)(path3)
 
     # 4 kernel
-    path4 = tf.keras.layers.Conv1D(filters[3][0], kernel_size=1, activation="relu")(layer)
-    path4 = tf.keras.layers.Conv1D(filters[3][1], kernel_size=4, activation="relu")(path4)
+    path4 = tf.keras.layers.Conv1D(filters[3][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+    path4 = tf.keras.layers.Conv1D(filters[3][1], kernel_size=4, activation="relu", padding=PADDING)(path4)
 
     # 5 kernel
-    path5 = tf.keras.layers.Conv1D(filters[4][0], kernel_size=1, activation="relu")(layer)
-    path5 = tf.keras.layers.Conv1D(filters[4][1], kernel_size=5, activation="relu")(path5)
+    path5 = tf.keras.layers.Conv1D(filters[4][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+    path5 = tf.keras.layers.Conv1D(filters[4][1], kernel_size=5, activation="relu", padding=PADDING)(path5)
 
-    return tf.keras.layers.Concatenate(axis=1)([path1, path2, path3, path4])
+    return tf.keras.layers.Concatenate(axis=-1)([path1, path2, path3, path4])
 
 
 def get_model():
-    feature_layer = tf.keras.Input(shape=(BATCH_SIZE,))
+    input_layer = tf.keras.layers.DenseFeatures(numeric_columns)
+    feature_layer = input_layer(feature_layer_inputs)
 
-    layer = tf.keras.layers.Dense(units=256)(feature_layer)
-    layer = tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1))(layer)
-    layer = InceptionLayer(layer, [32, (128, 32), (128, 32), (128, 32), (128, 32)])
-    layer = InceptionLayer(layer, [32, (128, 32), (128, 32), (128, 32), (128, 32)])
-    layer = tf.keras.layers.MaxPool1D(pool_size=3, strides=1)(layer)
+    layer = tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1))(feature_layer)
+    layer = InceptionLayer(layer, [256, (128, 64), (128, 32), (128, 16), (128, 8)])
+    # layer = InceptionLayer(layer, [32, (128, 64), (128, 32), (128, 16), (128, 8)])
+
+    # Flatten
+    layer = tf.keras.layers.Flatten()(layer)
 
     # Dense
+    layer = tf.keras.layers.Dense(units=512)(layer)
     layer = tf.keras.layers.Dense(units=128)(layer)
     layer = tf.keras.layers.Dense(units=64)(layer)
-    layer = tf.keras.layers.Dense(units=32)(layer)
 
     layer = tf.keras.layers.Dense(units=1)(layer)
-    model = tf.keras.models.Model(inputs=feature_layer, outputs=layer)
+    model = tf.keras.models.Model(inputs=[v for v in feature_layer_inputs.values()], outputs=layer)
     return model
 
-
 model = get_model()
+model.summary()
+
 model.compile(
     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
     optimizer="adam",
