@@ -13,6 +13,12 @@ def window_approach_feature_engineering(file_name_source, file_name_destination)
         next(reader)
         with open(file_name_destination, "w", newline="") as destination:
             writer = csv.writer(destination)
+
+            # First row - headers - make tf.data creation easier
+            var_names = ["var" + str(i) for i in range(RECORD_LENGTH - 1)]
+            label_names = ["label" + str(i) for i in range(RECORD_LENGTH)]
+            writer.writerow([*var_names, *label_names])
+
             batch = []
             for _ in range(RECORD_LENGTH):
                 batch.append(next(reader))
@@ -37,6 +43,12 @@ def lstm_approach(file_name_source, file_name_destination):
         next(reader)
         with open(file_name_destination, "w", newline="") as destination:
             writer = csv.writer(destination)
+
+            # First row - headers - make tf.data creation easier
+            var_names = ["var" + str(i) for i in range(RECORD_LENGTH - 1)]
+            writer.writerow([*var_names, "label"])
+
+
             batch = []
             for _ in range(RECORD_LENGTH):
                 batch.append(next(reader))
