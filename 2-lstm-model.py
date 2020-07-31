@@ -114,7 +114,7 @@ numeric_layer(example_batch).numpy()
 # Callbacks and history
 ########################
 lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-  0.001,
+  0.01,
   decay_steps=8554*30,
   decay_rate=1,
   staircase=False)
@@ -244,19 +244,35 @@ histories = {}
 #     tf.keras.layers.Dense(1, activation="sigmoid"),
 # ])
 
-model_dense = tf.keras.Sequential([
+# model_densev2 = tf.keras.Sequential([
+#     tf.keras.layers.DenseFeatures(numeric_columns),
+#     tf.keras.layers.Dense(2048, activation="relu"),
+#     tf.keras.layers.Dense(2048, activation="relu"),
+#     tf.keras.layers.Dense(1024, activation="relu"),
+#     tf.keras.layers.Dense(1024, activation="relu"),
+#     tf.keras.layers.Dense(512, activation="relu"),
+#     tf.keras.layers.Dense(512, activation="relu"),
+#     tf.keras.layers.Dense(256, activation="relu"),
+#     tf.keras.layers.Dense(256, activation="relu"),
+#     tf.keras.layers.Dense(128, activation="relu"),
+#     tf.keras.layers.Dense(128, activation="relu"),
+#     tf.keras.layers.Dense(64, activation="relu"),
+#     tf.keras.layers.Dense(1)
+# ])
+
+model_densev3 = tf.keras.Sequential([
     tf.keras.layers.DenseFeatures(numeric_columns),
     tf.keras.layers.Dense(2048, activation="relu"),
     tf.keras.layers.Dense(2048, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
-    tf.keras.layers.Dense(512, activation="relu"),
-    tf.keras.layers.Dense(512, activation="relu"),
-    tf.keras.layers.Dense(256, activation="relu"),
-    tf.keras.layers.Dense(256, activation="relu"),
-    tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1)
 ])
 
@@ -272,7 +288,7 @@ model.fit(
     train_data,
     epochs=1000,
     validation_data=test_data,
-    callbacks=get_callbacks()
+    callbacks=get_callbacks(),
 )
 
 test_loss, test_accuracy = model.evaluate(test_data)
