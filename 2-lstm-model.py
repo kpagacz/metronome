@@ -48,7 +48,7 @@ TRAIN_FILE_PATH = "lstm-data-train-15-variables.csv"
 TEST_FILE_PATH = "lstm-data-eval-15-variables.csv"
 
 raw_train_data = get_dataset(TRAIN_FILE_PATH) 
-raw_test_data = get_dataset(TEST_FILE_PATH)
+raw_test_data = get_dataset(TEST_FILE_PATH, shuffle=False)
 
 def show_batch(dataset):
   for batch, label in dataset.take(1):
@@ -114,7 +114,7 @@ numeric_layer(example_batch).numpy()
 # Callbacks and history
 ########################
 lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-  0.01,
+  0.001,
   decay_steps=8554*30,
   decay_rate=1,
   staircase=False)
@@ -141,7 +141,7 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 )
 
 
-def get_callbacks(name):
+def get_callbacks():
     return [
         # tfdocs.modeling.EpochDots(),
         tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=30),
@@ -155,6 +155,7 @@ def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epoc
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=[
+
                       "accuracy",
                       tf.keras.metrics.AUC()])
 
@@ -163,7 +164,7 @@ def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epoc
         train_data,
         epochs=max_epochs,
         validation_data=test_data,
-        callbacks=get_callbacks(name),
+        callbacks=get_callbacks(),
         verbose=1
     )
 
@@ -229,10 +230,24 @@ histories = {}
 #####################
 # Dense complicated
 #####################
+# model_dense = tf.keras.Sequential([
+#     tf.keras.layers.DenseFeatures(numeric_columns),
+#     tf.keras.layers.Dense(2048, activation="relu"),
+#     tf.keras.layers.Dense(1024, activation="relu"),
+#     tf.keras.layers.Dense(1024, activation="relu"),
+#     tf.keras.layers.Dense(1024, activation="relu"),
+#     tf.keras.layers.Dense(512, activation="relu"),
+#     tf.keras.layers.Dense(512, activation="relu"),
+#     tf.keras.layers.Dense(256, activation="relu"),
+#     tf.keras.layers.Dense(256, activation="relu"),
+#     tf.keras.layers.Dense(128, activation="relu"),
+#     tf.keras.layers.Dense(1, activation="sigmoid"),
+# ])
+
 model_dense = tf.keras.Sequential([
     tf.keras.layers.DenseFeatures(numeric_columns),
     tf.keras.layers.Dense(2048, activation="relu"),
-    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(2048, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(512, activation="relu"),
@@ -240,14 +255,25 @@ model_dense = tf.keras.Sequential([
     tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(1, activation="sigmoid"),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dense(1)
 ])
 
 model = model_dense
 train_data = packed_train_data.shuffle(500)
 test_data = packed_test_data
 
-histories["DenseComplicated"] = compile_and_fit(model, train_data, test_data, "archs/DenseComplicatedv2")
+model.compile(optimizer=tf.keras.optimizers.Adam(lr_schedule), loss=
+    tf.keras.losses.BinaryCrossentropy(from_logits=True),
+    metrics=["accuracy"])
+
+model.fit(
+    train_data,
+    epochs=1000,
+    validation_data=test_data,
+    callbacks=get_callbacks()
+)
 
 test_loss, test_accuracy = model.evaluate(test_data)
 
