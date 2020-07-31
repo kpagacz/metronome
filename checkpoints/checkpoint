@@ -1,2 +1,2 @@
-model_checkpoint_path: "cnn-v2"
-all_model_checkpoint_paths: "cnn-v2"
+model_checkpoint_path: "window15-deep"
+all_model_checkpoint_paths: "window15-deep"

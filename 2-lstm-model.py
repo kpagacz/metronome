@@ -3,6 +3,12 @@ import csv
 import numpy as np 
 import pandas as pd 
 import functools
+import errno
+import os
+
+import tensorflow_docs as tfdocs
+import tensorflow_docs.modeling
+import tensorflow_docs.plots
 
 from config import RECORD_LENGTH, BATCH_SIZE
 
@@ -107,211 +113,312 @@ example_batch["numeric"]
 numeric_layer = tf.keras.layers.DenseFeatures(numeric_columns)
 numeric_layer(example_batch).numpy()
 
+########################
+# Callbacks and history
+########################
+lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+  0.001,
+  decay_steps=8554*50,
+  decay_rate=1,
+  staircase=False)
+
+def get_optimizer():
+  return tf.keras.optimizers.Adam(lr_schedule)
+
+
+logdir = "logs"
+try:
+    os.makedirs(logdir)
+except OSError as e:
+    if e.errno != errno.EEXIST:
+        raise
+
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath="checkpoints/window15-deep",
+    save_weights_only=True,
+    monitor="val_loss",
+    mode="min",
+    save_best_only=True,
+    save_freq="epoch",
+    verbose=1
+)
+
+
+def get_callbacks(name):
+    return [
+        # tfdocs.modeling.EpochDots(),
+        tf.keras.callbacks.EarlyStopping(monitor="val_binary_crossentropy", patience=60d),
+        model_checkpoint_callback,
+        # tf.keras.callbacks.TensorBoard(logdir + "/" + name)
+    ]
+
+def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epochs=10000):
+    if optimizer is None:
+        optimizer = get_optimizer()
+    model.compile(optimizer=optimizer,
+                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                  metrics=[
+                      tf.keras.losses.BinaryCrossentropy(
+                          from_logits=True, name="binary_crossentropy"),
+                      "accuracy"])
+
+
+    history = model.fit(
+        train_data,
+        epochs=max_epochs,
+        validation_data=test_data,
+        callbacks=get_callbacks(name),
+        verbose=1
+    )
+
+    model.summary()
+
+    return history
+
+
+histories = {}
+
 
 ###########
 # Baseline
 ###########
-model = tf.keras.Sequential([
+# model = tf.keras.Sequential([
+#     tf.keras.layers.DenseFeatures(numeric_columns),
+#     tf.keras.layers.Dense(128, activation="relu"),
+#     tf.keras.layers.Dense(128, activation="relu"),
+#     tf.keras.layers.Dense(1)
+# ])
+
+# model.compile(
+#     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+#     optimizer="adam",
+#     metrics=["accuracy"]
+# )
+
+# train_data = packed_train_data.shuffle(500)
+# test_data = packed_test_data
+
+# model.fit(train_data, epochs=20)
+
+# test_loss, test_accuracy = model.evaluate(test_data)
+
+# print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
+
+# model.save_weights("./checkpoints/baseline-model-weights")
+
+#####################
+# Dense complicated
+#####################
+model_dense = tf.keras.Sequential([
     tf.keras.layers.DenseFeatures(numeric_columns),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dense(32, activation="relu"),
     tf.keras.layers.Dense(1)
 ])
 
-model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-    optimizer="adam",
-    metrics=["accuracy"]
-)
-
+model = model_dense
 train_data = packed_train_data.shuffle(500)
 test_data = packed_test_data
 
-model.fit(train_data, epochs=20)
+histories["DenseComplicated"] = compile_and_fit(model, train_data, test_data, "archs/DenseComplicated")
 
 test_loss, test_accuracy = model.evaluate(test_data)
 
 print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
 
-model.save_weights("./checkpoints/baseline-model-weights")
+model.save_weights("./checkpoints/DenseComplicated-weights")
 
-
-
-#############
-# LSTM
-#############
-model = tf.keras.Sequential([
-    tf.keras.layers.DenseFeatures(numeric_columns),
-    tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1)),
-    tf.keras.layers.LSTM(32, activation="relu"),
-    tf.keras.layers.Dense(1)
-])
-
-model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-    optimizer="adam",
-    metrics=["accuracy"]
-)
-
-train_data = packed_train_data.shuffle(250)
-test_data = packed_test_data
-
-model.fit(train_data, epochs=20)
-
-test_loss, test_accuracy = model.evaluate(test_data)
-
-print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
-
-model.save_weights("./checkpoints/lstm-baseline")
-
-
-###########
-# CNN
-###########
-model = tf.keras.Sequential([
-    tf.keras.layers.DenseFeatures(numeric_columns),
-    tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1)),
-    tf.keras.layers.Conv1D(filters=32, kernel_size=3, activation="relu"),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(1)
-])
-
-model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-    optimizer="adam",
-    metrics=["accuracy"]
-)
-
-train_data = packed_train_data.shuffle(250)
-test_data = packed_test_data
-
-model.fit(train_data, epochs=20)
-
-test_loss, test_accuracy = model.evaluate(test_data)
-
-print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
-
-model.save_weights("./checkpoints/cnn-baseline")
-
-
-###########
-# CNN - complicated
-###########
-model = tf.keras.Sequential([
-    tf.keras.layers.DenseFeatures(numeric_columns),
-    tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1)),
-    tf.keras.layers.Conv1D(filters=32, kernel_size=3, activation="relu"),
-    tf.keras.layers.Conv1D(filters=32, kernel_size=4, activation="relu"),
-    tf.keras.layers.Conv1D(filters=32, kernel_size=5, activation="relu"),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(units=128),
-    tf.keras.layers.Dense(1)
-])
-
-model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-    optimizer="adam",
-    metrics=["accuracy"]
-)
-
-train_data = packed_train_data.shuffle(250)
-test_data = packed_test_data
-
-model.fit(train_data, epochs=20)
-
-test_loss, test_accuracy = model.evaluate(test_data)
-
-print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
+plotter = tfdocs.plots.HistoryPlotter(metric="binary_crossentropy", smoothing_std=10)
+plotter.plot(size_histories)
 
 predictions = model.predict(test_data)
 
-# Show some results
-for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
-  prediction = tf.sigmoid(prediction).numpy()
-  print("Predicted being real glucose: {:.2%}".format(prediction[0]),
-        " | Actual outcome: ",
-        ("REAL" if bool(survived) else "ADDITIONAL"))
+# # Show some results
+# for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
+#   prediction = tf.sigmoid(prediction).numpy()
+#   print("Predicted being real glucose: {:.2%}".format(prediction[0]),
+#         " | Actual outcome: ",
+#         ("REAL" if bool(survived) else "ADDITIONAL"))
 
-model.save_weights("./checkpoints/cnn-v2")
+# #############
+# # LSTM
+# #############
+# model = tf.keras.Sequential([
+#     tf.keras.layers.DenseFeatures(numeric_columns),
+#     tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1)),
+#     tf.keras.layers.LSTM(32, activation="relu"),
+#     tf.keras.layers.Dense(1)
+# ])
+
+# model.compile(
+#     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+#     optimizer="adam",
+#     metrics=["accuracy"]
+# )
+
+# train_data = packed_train_data.shuffle(250)
+# test_data = packed_test_data
+
+# model.fit(train_data, epochs=20)
+
+# test_loss, test_accuracy = model.evaluate(test_data)
+
+# print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
+
+# model.save_weights("./checkpoints/lstm-baseline")
+
+
+# ###########
+# # CNN
+# ###########
+# model = tf.keras.Sequential([
+#     tf.keras.layers.DenseFeatures(numeric_columns),
+#     tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1)),
+#     tf.keras.layers.Conv1D(filters=32, kernel_size=3, activation="relu"),
+#     tf.keras.layers.Flatten(),
+#     tf.keras.layers.Dense(1)
+# ])
+
+# model.compile(
+#     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+#     optimizer="adam",
+#     metrics=["accuracy"]
+# )
+
+# train_data = packed_train_data.shuffle(250)
+# test_data = packed_test_data
+
+# model.fit(train_data, epochs=20)
+
+# test_loss, test_accuracy = model.evaluate(test_data)
+
+# print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
+
+# model.save_weights("./checkpoints/cnn-baseline")
+
+
+# ###########
+# # CNN - complicated
+# ###########
+# model = tf.keras.Sequential([
+#     tf.keras.layers.DenseFeatures(numeric_columns),
+#     tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1)),
+#     tf.keras.layers.Conv1D(filters=32, kernel_size=3, activation="relu"),
+#     tf.keras.layers.Conv1D(filters=32, kernel_size=4, activation="relu"),
+#     tf.keras.layers.Conv1D(filters=32, kernel_size=5, activation="relu"),
+#     tf.keras.layers.Flatten(),
+#     tf.keras.layers.Dense(units=128),
+#     tf.keras.layers.Dense(1)
+# ])
+
+# model.compile(
+#     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+#     optimizer="adam",
+#     metrics=["accuracy"]
+# )
+
+# train_data = packed_train_data.shuffle(250)
+# test_data = packed_test_data
+
+# model.fit(train_data, epochs=20)
+
+# test_loss, test_accuracy = model.evaluate(test_data)
+
+# print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
+
+# predictions = model.predict(test_data)
+
+# # Show some results
+# for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
+#   prediction = tf.sigmoid(prediction).numpy()
+#   print("Predicted being real glucose: {:.2%}".format(prediction[0]),
+#         " | Actual outcome: ",
+#         ("REAL" if bool(survived) else "ADDITIONAL"))
+
+# model.save_weights("./checkpoints/cnn-v2")
 
 ###########
 # CNN - inceptions
 ###########
-# TODO (konrad.pagacz@gmail.com) go back to the DenseFeatures and figure out a way to use it
-feature_layer_inputs = {}
-for header in ["numeric"]:
-  feature_layer_inputs[header] = tf.keras.Input(shape=(14,), name=header)
+# feature_layer_inputs = {}
+# for header in ["numeric"]:
+#   feature_layer_inputs[header] = tf.keras.Input(shape=(14,), name=header)
 
-PADDING = "same"
+# PADDING = "same"
 
-def InceptionLayer(layer, filters):
-    # 1 kernel
-    path1 = tf.keras.layers.Conv1D(filters[0], kernel_size=1, activation="relu")(layer)
+# def InceptionLayer(layer, filters):
+#     # 1 kernel
+#     path1 = tf.keras.layers.Conv1D(filters[0], kernel_size=1, activation="relu")(layer)
 
-    # 2 kernel
-    path2 = tf.keras.layers.Conv1D(filters[1][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
-    path2 = tf.keras.layers.Conv1D(filters[1][1], kernel_size=2, activation="relu", padding=PADDING)(path2)
+#     # 2 kernel
+#     path2 = tf.keras.layers.Conv1D(filters[1][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+#     path2 = tf.keras.layers.Conv1D(filters[1][1], kernel_size=2, activation="relu", padding=PADDING)(path2)
 
-    # 3 kernel
-    path3 = tf.keras.layers.Conv1D(filters[2][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
-    path3 = tf.keras.layers.Conv1D(filters[2][1], kernel_size=3, activation="relu", padding=PADDING)(path3)
+#     # 3 kernel
+#     path3 = tf.keras.layers.Conv1D(filters[2][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+#     path3 = tf.keras.layers.Conv1D(filters[2][1], kernel_size=3, activation="relu", padding=PADDING)(path3)
 
-    # 4 kernel
-    path4 = tf.keras.layers.Conv1D(filters[3][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
-    path4 = tf.keras.layers.Conv1D(filters[3][1], kernel_size=4, activation="relu", padding=PADDING)(path4)
+#     # 4 kernel
+#     path4 = tf.keras.layers.Conv1D(filters[3][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+#     path4 = tf.keras.layers.Conv1D(filters[3][1], kernel_size=4, activation="relu", padding=PADDING)(path4)
 
-    # 5 kernel
-    path5 = tf.keras.layers.Conv1D(filters[4][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
-    path5 = tf.keras.layers.Conv1D(filters[4][1], kernel_size=5, activation="relu", padding=PADDING)(path5)
+#     # 5 kernel
+#     path5 = tf.keras.layers.Conv1D(filters[4][0], kernel_size=1, activation="relu", padding=PADDING)(layer)
+#     path5 = tf.keras.layers.Conv1D(filters[4][1], kernel_size=5, activation="relu", padding=PADDING)(path5)
 
-    return tf.keras.layers.Concatenate(axis=-1)([path1, path2, path3, path4])
+#     return tf.keras.layers.Concatenate(axis=-1)([path1, path2, path3, path4])
 
 
-def get_model():
-    input_layer = tf.keras.layers.DenseFeatures(numeric_columns)
-    feature_layer = input_layer(feature_layer_inputs)
+# def get_model():
+#     input_layer = tf.keras.layers.DenseFeatures(numeric_columns)
+#     feature_layer = input_layer(feature_layer_inputs)
 
-    layer = tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1))(feature_layer)
-    layer = InceptionLayer(layer, [256, (128, 64), (128, 32), (128, 16), (128, 8)])
-    # layer = InceptionLayer(layer, [32, (128, 64), (128, 32), (128, 16), (128, 8)])
+#     layer = tf.keras.layers.Reshape((RECORD_LENGTH - 1, 1))(feature_layer)
+#     layer = InceptionLayer(layer, [256, (128, 64), (128, 32), (128, 16), (128, 8)])
+#     # layer = InceptionLayer(layer, [32, (128, 64), (128, 32), (128, 16), (128, 8)])
 
-    # Flatten
-    layer = tf.keras.layers.Flatten()(layer)
+#     # Flatten
+#     layer = tf.keras.layers.Flatten()(layer)
 
-    # Dense
-    layer = tf.keras.layers.Dense(units=512)(layer)
-    layer = tf.keras.layers.Dense(units=128)(layer)
-    layer = tf.keras.layers.Dense(units=64)(layer)
+#     # Dense
+#     layer = tf.keras.layers.Dense(units=512)(layer)
+#     layer = tf.keras.layers.Dense(units=128)(layer)
+#     layer = tf.keras.layers.Dense(units=64)(layer)
 
-    layer = tf.keras.layers.Dense(units=1)(layer)
-    model = tf.keras.models.Model(inputs=[v for v in feature_layer_inputs.values()], outputs=layer)
-    return model
+#     layer = tf.keras.layers.Dense(units=1)(layer)
+#     model = tf.keras.models.Model(inputs=[v for v in feature_layer_inputs.values()], outputs=layer)
+#     return model
 
-model = get_model()
-model.summary()
+# model = get_model()
+# model.summary()
 
-model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-    optimizer="adam",
-    metrics=["accuracy"]
-)
+# model.compile(
+#     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+#     optimizer="adam",
+#     metrics=["accuracy"]
+# )
 
-train_data = packed_train_data.shuffle(250)
-test_data = packed_test_data
+# train_data = packed_train_data.shuffle(250)
+# test_data = packed_test_data
 
-model.fit(train_data, epochs=1)
+# model.fit(train_data, epochs=100)
 
-test_loss, test_accuracy = model.evaluate(test_data)
+# test_loss, test_accuracy = model.evaluate(test_data)
 
-print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
+# print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
 
-predictions = model.predict(test_data)
+# predictions = model.predict(test_data)
 
-# Show some results
-for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
-  prediction = tf.sigmoid(prediction).numpy()
-  print("Predicted being real glucose: {:.2%}".format(prediction[0]),
-        " | Actual outcome: ",
-        ("REAL" if bool(survived) else "ADDITIONAL"))
+# # Show some results
+# for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
+#   prediction = tf.sigmoid(prediction).numpy()
+#   print("Predicted being real glucose: {:.2%}".format(prediction[0]),
+#         " | Actual outcome: ",
+#         ("REAL" if bool(survived) else "ADDITIONAL"))
 
-model.save_weights("./checkpoints/cnn-inceptions")
+# model.save_weights("./checkpoints/cnn-inceptions")
