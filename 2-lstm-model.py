@@ -276,7 +276,7 @@ model_densev3 = tf.keras.Sequential([
     tf.keras.layers.Dense(1)
 ])
 
-model = model_dense
+model = model_densev3
 train_data = packed_train_data.shuffle(500)
 test_data = packed_test_data
 
@@ -295,7 +295,7 @@ test_loss, test_accuracy = model.evaluate(test_data)
 
 print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
 
-model.save_weights("./checkpoints/DenseComplicatedv2")
+model.save_weights("./checkpoints/DenseComplicatedv3")
 
 predictions = model.predict(test_data)
 
