@@ -131,7 +131,7 @@ except OSError as e:
         raise
 
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath="checkpoints/window15-deep",
+    filepath="checkpoints/DeepCleanerv2",
     save_weights_only=True,
     monitor="val_loss",
     mode="min",
@@ -155,8 +155,6 @@ def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epoc
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=[
-                      tf.keras.losses.BinaryCrossentropy(
-                          from_logits=True, name="binary_crossentropy"),
                       "accuracy",
                       tf.keras.metrics.AUC()])
 
@@ -249,7 +247,7 @@ model = model_dense
 train_data = packed_train_data.shuffle(500)
 test_data = packed_test_data
 
-histories["DenseComplicated"] = compile_and_fit(model, train_data, test_data, "archs/DenseComplicated")
+histories["DenseComplicated"] = compile_and_fit(model, train_data, test_data, "archs/DenseComplicatedv2")
 
 test_loss, test_accuracy = model.evaluate(test_data)
 
