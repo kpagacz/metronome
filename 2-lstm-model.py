@@ -114,7 +114,7 @@ numeric_layer(example_batch).numpy()
 # Callbacks and history
 ########################
 lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-  0.001,
+  0.01,
   decay_steps=8554*30,
   decay_rate=1,
   staircase=False)
@@ -202,29 +202,29 @@ histories = {}
 ###########
 # Baseline
 ###########
-model = tf.keras.Sequential([
-    tf.keras.layers.DenseFeatures(numeric_columns),
-    tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(1)
-])
+# model = tf.keras.Sequential([
+#     tf.keras.layers.DenseFeatures(numeric_columns),
+#     tf.keras.layers.Dense(128, activation="relu"),
+#     tf.keras.layers.Dense(128, activation="relu"),
+#     tf.keras.layers.Dense(1)
+# ])
 
-model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-    optimizer="adam",
-    metrics=["accuracy"]
-)
+# model.compile(
+#     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+#     optimizer="adam",
+#     metrics=["accuracy"]
+# )
 
-train_data = packed_train_data.shuffle(500)
-test_data = packed_test_data
+# train_data = packed_train_data.shuffle(500)
+# test_data = packed_test_data
 
-model.fit(train_data, epochs=20)
+# model.fit(train_data, epochs=20)
 
-test_loss, test_accuracy = model.evaluate(test_data)
+# test_loss, test_accuracy = model.evaluate(test_data)
 
-print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
+# print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
 
-model.save_weights("./checkpoints/baseline-model-weights")
+# model.save_weights("./checkpoints/baseline-model-weights")
 
 #####################
 # Dense complicated
