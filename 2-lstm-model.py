@@ -234,11 +234,12 @@ histories = {}
 model_dense = tf.keras.Sequential([
     tf.keras.layers.DenseFeatures(numeric_columns),
     tf.keras.layers.Dense(2048, activation="relu"),
-    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(512, activation="relu"),
     tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(128, activation="relu"),
     tf.keras.layers.Dense(1, activation="sigmoid"),
