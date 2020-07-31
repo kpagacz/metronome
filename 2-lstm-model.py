@@ -6,9 +6,6 @@ import functools
 import errno
 import os
 
-import tensorflow_docs as tfdocs
-import tensorflow_docs.modeling
-import tensorflow_docs.plots
 
 from config import RECORD_LENGTH, BATCH_SIZE
 
@@ -118,7 +115,7 @@ numeric_layer(example_batch).numpy()
 ########################
 lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
   0.001,
-  decay_steps=8554*50,
+  decay_steps=8554*30,
   decay_rate=1,
   staircase=False)
 
@@ -147,7 +144,7 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 def get_callbacks(name):
     return [
         # tfdocs.modeling.EpochDots(),
-        tf.keras.callbacks.EarlyStopping(monitor="val_binary_crossentropy", patience=60),
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=30),
         model_checkpoint_callback,
         # tf.keras.callbacks.TensorBoard(logdir + "/" + name)
     ]
@@ -160,7 +157,8 @@ def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epoc
                   metrics=[
                       tf.keras.losses.BinaryCrossentropy(
                           from_logits=True, name="binary_crossentropy"),
-                      "accuracy"])
+                      "accuracy",
+                      tf.keras.metrics.AUC()])
 
 
     history = model.fit(
@@ -177,6 +175,30 @@ def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epoc
 
 
 histories = {}
+
+###############
+# NAS
+###############
+# import autokeras as ak
+
+# classifier = ak.StructuredDataClassifier(
+#     loss="binary_crossentropy",
+#     metrics=["AUC", "accuracy"],
+#     objective="val_AUC",
+#     overwrite=True,
+#     max_trials=100,
+#     tuner="greedy"
+# )
+
+
+# train_data = packed_train_data.shuffle(500)
+# test_data = packed_test_data
+
+# classifier.fit(
+#     train_data,
+#     validation_split=0.1,
+#     epochs=1000
+# )
 
 
 ###########
@@ -211,14 +233,15 @@ histories = {}
 #####################
 model_dense = tf.keras.Sequential([
     tf.keras.layers.DenseFeatures(numeric_columns),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(2048, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(512, activation="relu"),
     tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(64, activation="relu"),
-    tf.keras.layers.Dense(32, activation="relu"),
-    tf.keras.layers.Dense(1, activation="sigmoid")
+    tf.keras.layers.Dense(1, activation="sigmoid"),
 ])
 
 model = model_dense
@@ -231,19 +254,16 @@ test_loss, test_accuracy = model.evaluate(test_data)
 
 print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
 
-model.save_weights("./checkpoints/DenseComplicated-weights")
-
-plotter = tfdocs.plots.HistoryPlotter(metric="binary_crossentropy", smoothing_std=10)
-plotter.plot(size_histories)
+model.save_weights("./checkpoints/DenseComplicatedv2")
 
 predictions = model.predict(test_data)
 
-# # Show some results
-# for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
-#   prediction = tf.sigmoid(prediction).numpy()
-#   print("Predicted being real glucose: {:.2%}".format(prediction[0]),
-#         " | Actual outcome: ",
-#         ("REAL" if bool(survived) else "ADDITIONAL"))
+# Show some results
+for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
+  prediction = tf.sigmoid(prediction).numpy()
+  print("Predicted being real glucose: {:.2%}".format(prediction[0]),
+        " | Actual outcome: ",
+        ("REAL" if bool(survived) else "ADDITIONAL"))
 
 # #############
 # # LSTM
