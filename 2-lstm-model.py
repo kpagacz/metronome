@@ -147,7 +147,7 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 def get_callbacks(name):
     return [
         # tfdocs.modeling.EpochDots(),
-        tf.keras.callbacks.EarlyStopping(monitor="val_binary_crossentropy", patience=60d),
+        tf.keras.callbacks.EarlyStopping(monitor="val_binary_crossentropy", patience=60),
         model_checkpoint_callback,
         # tf.keras.callbacks.TensorBoard(logdir + "/" + name)
     ]
@@ -218,7 +218,7 @@ model_dense = tf.keras.Sequential([
     tf.keras.layers.Dense(128, activation="relu"),
     tf.keras.layers.Dense(64, activation="relu"),
     tf.keras.layers.Dense(32, activation="relu"),
-    tf.keras.layers.Dense(1)
+    tf.keras.layers.Dense(1, activation="sigmoid")
 ])
 
 model = model_dense
