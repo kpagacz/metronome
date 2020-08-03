@@ -117,7 +117,7 @@ def compile(model, optimizer=None):
 
 
 # Dense
-model_dense = tf.keras.Sequential([
+model_densev1 = tf.keras.Sequential([
     tf.keras.layers.DenseFeatures(numeric_columns),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
@@ -145,17 +145,20 @@ model_densev2 = tf.keras.Sequential([
     tf.keras.layers.Dense(1)
 ])
 
+<<<<<<< HEAD
 
 #################
 # TESTING
 #################
+=======
+>>>>>>> 0ae4037a5b1b58b0618c2e47b49212b99d7ebfb5
 model_dense = model_densev2
 test_data = packed_test_data
 reverse_test_data = packed_reverse_test_data
 
 
 compile(model_dense)
-model_dense.load_weights("checkpoints/window15-deep")
+model_dense.load_weights("saved_models/DenseComplicatedv2")
 
 
 evaluation = model_dense.evaluate(test_data)
@@ -216,7 +219,7 @@ plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('Receiver operating characteristic')
 plt.legend(loc="lower right")
-plt.savefig("deep-window15-roc.png",
+plt.savefig("Densev2-roc.png",
     bbox_inches="tight")
 plt.show()
 plt.close()
@@ -224,6 +227,7 @@ plt.close()
 # Confusion
 report = metrics.classification_report(true, predictions)
 print(report)
+<<<<<<< HEAD
 
 
 ##############
@@ -256,3 +260,5 @@ report = metrics.classification_report(true_cut, voted_predictions)
 print(report)
 accuracy = metrics.accuracy_score(true_cut, voted_predictions)
 print("Accuracy: {:.4f}".format(accuracy))
+=======
+>>>>>>> 0ae4037a5b1b58b0618c2e47b49212b99d7ebfb5
