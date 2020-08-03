@@ -234,7 +234,7 @@ print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accura
 model.save_weights("./checkpoints/DenseComplicated-weights")
 
 plotter = tfdocs.plots.HistoryPlotter(metric="binary_crossentropy", smoothing_std=10)
-plotter.plot(size_histories)
+
 
 predictions = model.predict(test_data)
 

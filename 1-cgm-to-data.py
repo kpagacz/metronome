@@ -75,7 +75,45 @@ def lstm_approach(file_name_source, file_name_destination):
                 writer.writerow([*differences, y_label])
 
 
+
+def lstm_reverse_approach(file_name_source, file_name_destination):
+    with open(file_name_source, "r", newline="") as source:
+        reader = csv.reader(source)
+        next(reader)
+        with open(file_name_destination, "w", newline="") as destination:
+            writer = csv.writer(destination)
+
+            # First row - headers - make tf.data creation easier
+            var_names = ["var" + str(i) for i in range(RECORD_LENGTH - 1)]
+            writer.writerow([*var_names, "label"])
+
+
+            batch = []
+            for _ in range(RECORD_LENGTH):
+                batch.append(next(reader))
+
+            times = list(zip(*batch))
+            times_np = np.array([float(value) for value in times[0]])
+
+            differences = np.diff(times_np)
+            differences = np.flip(differences, axis=0)
+
+            y_label = times[1][0]
+
+            writer.writerow([*differences, y_label])
             
+            for row in reader:
+                batch.append(row)
+                batch = batch[1:]
+                times = list(zip(*batch))
+                times_np = np.array([float(value) for value in times[0]])
+
+                differences = np.diff(times_np)
+                differences = np.flip(differences, axis=0)
+
+                y_label = times[1][0]
+
+                writer.writerow([*differences, y_label])
 
 
 # Window approach
@@ -86,3 +124,7 @@ window_approach_feature_engineering("cgm-test.csv", "window-data-eval-15.csv")
 lstm_approach("cgm-train.csv", "lstm-data-train-15-variables.csv")
 lstm_approach("cgm-test.csv", "lstm-data-eval-15-variables.csv")
 
+
+# LSTM reverse
+lstm_reverse_approach("cgm-train.csv", "lstm-data-train-15-variables-reverse.csv")
+lstm_reverse_approach("cgm-test.csv", "lstm-data-eval-15-variables-reverse.csv")
