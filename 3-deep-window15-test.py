@@ -145,13 +145,9 @@ model_densev2 = tf.keras.Sequential([
     tf.keras.layers.Dense(1)
 ])
 
-<<<<<<< HEAD
-
 #################
 # TESTING
 #################
-=======
->>>>>>> 0ae4037a5b1b58b0618c2e47b49212b99d7ebfb5
 model_dense = model_densev2
 test_data = packed_test_data
 reverse_test_data = packed_reverse_test_data
@@ -227,7 +223,6 @@ plt.close()
 # Confusion
 report = metrics.classification_report(true, predictions)
 print(report)
-<<<<<<< HEAD
 
 
 ##############
@@ -260,5 +255,3 @@ report = metrics.classification_report(true_cut, voted_predictions)
 print(report)
 accuracy = metrics.accuracy_score(true_cut, voted_predictions)
 print("Accuracy: {:.4f}".format(accuracy))
-=======
->>>>>>> 0ae4037a5b1b58b0618c2e47b49212b99d7ebfb5
