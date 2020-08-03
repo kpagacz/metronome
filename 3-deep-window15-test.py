@@ -129,10 +129,27 @@ model_dense = tf.keras.Sequential([
     tf.keras.layers.Dense(1)
 ])
 
+model_densev2 = tf.keras.Sequential([
+    tf.keras.layers.DenseFeatures(numeric_columns),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(256, activation="relu"),
+    tf.keras.layers.Dense(256, activation="relu"),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dense(1)
+])
+
 
 #################
 # TESTING
 #################
+model_dense = model_densev2
 test_data = packed_test_data
 reverse_test_data = packed_reverse_test_data
 
@@ -229,7 +246,7 @@ plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('Receiver operating characteristic')
 plt.legend(loc="lower right")
-plt.savefig("deep-window15-voted-forward-reverse-roc.png",
+plt.savefig("DenseComplicatedv2-voted-forward-reverse-roc.png",
     bbox_inches="tight")
 plt.show()
 plt.close()

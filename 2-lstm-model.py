@@ -6,9 +6,6 @@ import functools
 import errno
 import os
 
-import tensorflow_docs as tfdocs
-import tensorflow_docs.modeling
-import tensorflow_docs.plots
 
 from config import RECORD_LENGTH, BATCH_SIZE
 
@@ -51,7 +48,7 @@ TRAIN_FILE_PATH = "lstm-data-train-15-variables.csv"
 TEST_FILE_PATH = "lstm-data-eval-15-variables.csv"
 
 raw_train_data = get_dataset(TRAIN_FILE_PATH) 
-raw_test_data = get_dataset(TEST_FILE_PATH)
+raw_test_data = get_dataset(TEST_FILE_PATH, shuffle=False)
 
 def show_batch(dataset):
   for batch, label in dataset.take(1):
@@ -117,8 +114,8 @@ numeric_layer(example_batch).numpy()
 # Callbacks and history
 ########################
 lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-  0.001,
-  decay_steps=8554*50,
+  0.01,
+  decay_steps=8554*30,
   decay_rate=1,
   staircase=False)
 
@@ -134,7 +131,7 @@ except OSError as e:
         raise
 
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath="checkpoints/window15-deep",
+    filepath="checkpoints/DeepCleanerv2",
     save_weights_only=True,
     monitor="val_loss",
     mode="min",
@@ -144,10 +141,10 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 )
 
 
-def get_callbacks(name):
+def get_callbacks():
     return [
         # tfdocs.modeling.EpochDots(),
-        tf.keras.callbacks.EarlyStopping(monitor="val_binary_crossentropy", patience=60),
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=30),
         model_checkpoint_callback,
         # tf.keras.callbacks.TensorBoard(logdir + "/" + name)
     ]
@@ -158,16 +155,16 @@ def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epoc
     model.compile(optimizer=optimizer,
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=[
-                      tf.keras.losses.BinaryCrossentropy(
-                          from_logits=True, name="binary_crossentropy"),
-                      "accuracy"])
+
+                      "accuracy",
+                      tf.keras.metrics.AUC()])
 
 
     history = model.fit(
         train_data,
         epochs=max_epochs,
         validation_data=test_data,
-        callbacks=get_callbacks(name),
+        callbacks=get_callbacks(),
         verbose=1
     )
 
@@ -177,6 +174,30 @@ def compile_and_fit(model, train_data, test_data, name, optimizer=None, max_epoc
 
 
 histories = {}
+
+###############
+# NAS
+###############
+# import autokeras as ak
+
+# classifier = ak.StructuredDataClassifier(
+#     loss="binary_crossentropy",
+#     metrics=["AUC", "accuracy"],
+#     objective="val_AUC",
+#     overwrite=True,
+#     max_trials=100,
+#     tuner="greedy"
+# )
+
+
+# train_data = packed_train_data.shuffle(500)
+# test_data = packed_test_data
+
+# classifier.fit(
+#     train_data,
+#     validation_split=0.1,
+#     epochs=1000
+# )
 
 
 ###########
@@ -211,39 +232,74 @@ histories = {}
 #####################
 model_dense = tf.keras.Sequential([
     tf.keras.layers.DenseFeatures(numeric_columns),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(1024, activation="relu"),
     tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(256, activation="relu"),
     tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(64, activation="relu"),
-    tf.keras.layers.Dense(32, activation="relu"),
-    tf.keras.layers.Dense(1, activation="sigmoid")
+    tf.keras.layers.Dense(1, activation="sigmoid"),
 ])
 
-model = model_dense
+model_densev2 = tf.keras.Sequential([
+    tf.keras.layers.DenseFeatures(numeric_columns),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(512, activation="relu"),
+    tf.keras.layers.Dense(256, activation="relu"),
+    tf.keras.layers.Dense(256, activation="relu"),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dense(64, activation="relu"),
+    tf.keras.layers.Dense(1)
+])
+
+model_densev3 = tf.keras.Sequential([
+    tf.keras.layers.DenseFeatures(numeric_columns),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(2048, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1024, activation="relu"),
+    tf.keras.layers.Dense(1)
+])
+
+model = model_densev2
 train_data = packed_train_data.shuffle(500)
 test_data = packed_test_data
 
-histories["DenseComplicated"] = compile_and_fit(model, train_data, test_data, "archs/DenseComplicated")
+model.compile(optimizer=tf.keras.optimizers.Adam(lr_schedule), loss=
+    tf.keras.losses.BinaryCrossentropy(from_logits=True),
+    metrics=["accuracy"])
+
+model.fit(
+    train_data,
+    epochs=1000,
+    validation_data=test_data,
+    callbacks=get_callbacks(),
+)
 
 test_loss, test_accuracy = model.evaluate(test_data)
 
 print("\n\nTest loss {:.4f}, Test Accuracy {:.4f}".format(test_loss, test_accuracy))
 
-model.save_weights("./checkpoints/DenseComplicated-weights")
-
-plotter = tfdocs.plots.HistoryPlotter(metric="binary_crossentropy", smoothing_std=10)
-
+# model.save_weights("./checkpoints/DenseComplicatedv3")
 
 predictions = model.predict(test_data)
 
-# # Show some results
-# for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
-#   prediction = tf.sigmoid(prediction).numpy()
-#   print("Predicted being real glucose: {:.2%}".format(prediction[0]),
-#         " | Actual outcome: ",
-#         ("REAL" if bool(survived) else "ADDITIONAL"))
+# Show some results
+for prediction, survived in zip(predictions[:10], list(test_data)[0][1][:10]):
+  prediction = tf.sigmoid(prediction).numpy()
+  print("Predicted being real glucose: {:.2%}".format(prediction[0]),
+        " | Actual outcome: ",
+        ("REAL" if bool(survived) else "ADDITIONAL"))
 
 # #############
 # # LSTM
