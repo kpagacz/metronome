@@ -86,7 +86,7 @@ class Cleaner5(Cleaner):
         all_values = []
         for _, values in data.items():
             if(type(values) == list):
-                all_values.append(*values)
+                all_values = all_values + values
             else:
                 all_values.append(values)
 
