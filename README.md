@@ -1,6 +1,6 @@
 # Metronome
 [![Build Status](https://travis-ci.org/kpagacz/glyculator-cleaner.svg?branch=app)](https://travis-ci.org/kpagacz/glyculator-cleaner)
-[![Maintainability](https://api.codeclimate.com/v1/badges/5bcae2030c59f8863739/maintainability)](https://codeclimate.com/github/kpagacz/glyculator-cleaner/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c6147e4561478ec28b30/maintainability)](https://codeclimate.com/github/kpagacz/metronome/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/5bcae2030c59f8863739/test_coverage)](https://codeclimate.com/github/kpagacz/glyculator-cleaner/test_coverage)
 
 ## Introduction
