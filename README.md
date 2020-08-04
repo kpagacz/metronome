@@ -13,6 +13,10 @@ Underneath the hood the predictions are handled by a tensorflow.keras neural net
 in Flask. Metronome currently does not have a production-grade hosting engine attached to it. The server packaged
 with the app is the one bundled with Flask - Werkzeug and it is not dedicated to production.
 
+The model itself predicts whether a 15th time point in a series of points in time belongs to an arbitrary temporal pattern
+present among those 15 points in time. The pattern is defined by a sequence of points in time separated by a constant 
+interval specified in input.
+
 ## Metronome setup
 ### Requirements
 Metronome requires Python version 3.6+.
@@ -88,6 +92,13 @@ Parameters:
 
 Each "var0" - "var14" contains list of float values of seconds between 15 consecutive time points.
 
+Return:
+Metronome returns a json with following key-value pairs:
+"probabilities" - list of probabilities whether the 15th points in a series is part of the pattern or not.
+    Length of the list corresponds to the number of instances provided in the post HTTP request
+"predictions" - list of predictions (0 or 1) whether the 15th point in a series is part of the pattern (1) or not (0).
+    Length of the list corresponds to the number of instances provided in the request
+
 ### Input requirements
 The HTTP post call at /v1/models/metronome needs to have a json payload constructed as follows:
 14 keys named from var0, var1, var2 ... to var14. Values have to be a list of differences
@@ -128,4 +139,6 @@ example_data["interval"] = 5 # interval in minutes
 payload = json.dumps(example_data)
 print(payload)
 ```
+
+Metronome does not perform any checks
 
