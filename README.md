@@ -13,7 +13,7 @@ Underneath the hood the predictions are handled by a tensorflow.keras neural net
 in Flask. Metronome currently does not have a production-grade hosting engine attached to it. The server packaged
 with the app is the one bundled with Flask - Werkzeug and it is not dedicated to production.
 
-The model itself predicts whether a 15th time point in a series of points in time belongs to an arbitrary temporal pattern
+The model itself predicts whether the 15th time point in a series of points in time belongs to an arbitrary temporal pattern
 present among those 15 points in time. The pattern is defined by a sequence of points in time separated by a constant 
 interval specified in input.
 
@@ -73,24 +73,24 @@ print(response)
 ### /v1/models/metronome
 Method: POST
 Parameters:
-"var0" - list of float values
-"var1" - list of float values
-"var2" - list of float values
-"var3" - list of float values
-"var4" - list of float values
-"var5" - list of float values
-"var6" - list of float values
-"var7" - list of float values
-"var8" - list of float values
-"var9" - list of float values
-"var10" - list of float values
-"var11" - list of float values
-"var12" - list of float values
-"var13" - list of float values
-"var14" - list of float values 
-"interval" - float - number of minutes
+- "var0" - list of float values
+- "var1" - list of float values
+- "var2" - list of float values
+- "var3" - list of float values
+- "var4" - list of float values
+- "var5" - list of float values
+- "var6" - list of float values
+- "var7" - list of float values
+- "var8" - list of float values
+- "var9" - list of float values
+- "var10" - list of float values
+- "var11" - list of float values
+- "var12" - list of float values
+- "var13" - list of float values
+- "var14" - list of float values 
+- "interval" - float - number of minutes
 
-Each "var0" - "var14" contains list of float values of seconds between 15 consecutive time points.
+Each "var0" - "var14" contains a list of float values of seconds between 15 consecutive time points.
 
 Return:
 Metronome returns a json with following key-value pairs:
@@ -140,5 +140,5 @@ payload = json.dumps(example_data)
 print(payload)
 ```
 
-Metronome does not perform any checks
+Metronome does not perform any checks regarding validity of the input.
 
