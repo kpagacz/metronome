@@ -15,5 +15,6 @@ before_script:
     - ./cc-test-reporter before-build
 script:
     - coverage run --omit tests/* -m unittest -v
+    - python cleaner.py
 after_script:
     - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

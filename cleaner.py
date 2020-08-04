@@ -2,7 +2,7 @@ import flask
 import numpy as np
 import json
 
-from cleaner.Cleaner import Cleaner5
+from metronome.Metronome import Metronome5
 from utils.app_utils import NumpyEncoder
 
 # TO-DO (konrad.pagacz@gmail.com) expand docs - a solid readme is much needed
@@ -12,9 +12,9 @@ app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
 # Cleaner setup
-cleaner_interval_5 = Cleaner5()
+cleaner_interval_5 = Metronome5()
 
-@app.route("/v1/models/cleaner", methods=["POST"])
+@app.route("/v1/models/metronome", methods=["POST"])
 def clean():
     incoming = flask.request.get_json()
     incoming_data = json.loads(incoming)
@@ -31,4 +31,4 @@ def clean():
         return json.dumps({})
     
 
-app.run()
+app.run(port=5000)

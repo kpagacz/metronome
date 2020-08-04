@@ -2,9 +2,9 @@ import numpy as np
 import tensorflow as tf
 import functools
 
-import cleaner.config as config
+import metronome.config as config
 
-class Cleaner(object):
+class Metronome(object):
     def predict_proba(self):
         raise NotImplementedError
 
@@ -15,10 +15,10 @@ class Cleaner(object):
         raise NotImplementedError
 
 
-class Cleaner5(Cleaner):
+class Metronome5(Metronome):
     """Wrapper around keras model.
     
-    Makes predictions about CGM time points
+    Makes predictions about series of time points
     being a part of regular 5 minutes interspersed
     measurement.
 
