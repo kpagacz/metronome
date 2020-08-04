@@ -1,7 +1,8 @@
 # Metronome
 [![Build Status](https://travis-ci.org/kpagacz/glyculator-cleaner.svg?branch=app)](https://travis-ci.org/kpagacz/glyculator-cleaner)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c6147e4561478ec28b30/maintainability)](https://codeclimate.com/github/kpagacz/metronome/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/5bcae2030c59f8863739/test_coverage)](https://codeclimate.com/github/kpagacz/glyculator-cleaner/test_coverage)
+[![codecov](https://codecov.io/gh/kpagacz/metronome/branch/app/graph/badge.svg)](https://codecov.io/gh/kpagacz/metronome)
+
 
 ## Introduction
 Metronome is a very simple python app designed to find a pattern in a series of time points. 
