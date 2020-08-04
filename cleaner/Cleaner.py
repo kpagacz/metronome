@@ -5,10 +5,6 @@ import functools
 import cleaner.config as config
 
 class Cleaner(object):
-    def __init__(self):
-        self.model = self.set_up_model()
-        self._probabilities = None
-
     def predict_proba(self):
         raise NotImplementedError
 
@@ -28,7 +24,8 @@ class Cleaner5(Cleaner):
 
     """
     def __init__(self):
-        super(Cleaner5, self).__init__()
+        self.model = self.set_up_model()
+        self._probabilities = None
 
     def predict_proba(self, data: dict) -> np.ndarray:
         """Returns model probability predictions.
@@ -85,10 +82,7 @@ class Cleaner5(Cleaner):
         """
         all_values = []
         for _, values in data.items():
-            if(type(values) == list):
-                all_values = all_values + values
-            else:
-                all_values.append(values)
+            all_values.append(values)
 
         matrix = np.array(all_values).reshape((config.WINDOW_SIZE - 1, -1)).transpose()
         tensor = tf.convert_to_tensor(matrix)

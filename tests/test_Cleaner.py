@@ -3,10 +3,10 @@ import tensorflow as tf
 import numpy as np 
 import cleaner.config as config
 
-from cleaner.Cleaner import Cleaner5
+from cleaner.Cleaner import Cleaner5, Cleaner
 
 
-class TestCleaner(unittest.TestCase):
+class TestCleaner5(unittest.TestCase):
     def setUp(self):
         self.cleaner = Cleaner5()
         self.simple_dict = {
@@ -63,9 +63,36 @@ class TestCleaner(unittest.TestCase):
         )
 
     def test_predict_proba_shape_many_cases(self):
-        print(self.many_cases_dict)
         res_proba = self.cleaner.predict_proba(self.many_cases_dict)
         self.assertTupleEqual(
             res_proba.shape,
             (4, )
         )
+
+    def test_predict_shape_one_case(self):
+        res_predictions = self.cleaner.predict(self.simple_dict)
+        self.assertTupleEqual(
+            res_predictions.shape,
+            (1, )
+        )
+
+    def test_predict_shape_many_cases(self):
+        res_predictions = self.cleaner.predict(self.many_cases_dict)
+        self.assertTupleEqual(
+            res_predictions.shape,
+            (4, )
+        )
+
+
+class testCleanerBase(unittest.TestCase):
+    def test_predict_proba_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            Cleaner().predict_proba()
+
+    def test_predict_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            Cleaner().predict()
+
+    def test_set_up_model(self):
+        with self.assertRaises(NotImplementedError):
+            Cleaner().set_up_model()
