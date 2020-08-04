@@ -1,5 +1,5 @@
 env:
-    - PYTHONPATH=PYTHONPATH:$(pwd)
+    - CODECOV_TOKEN="245d5a90-4b83-4f7d-b128-e529ee0a7a6f"
 language: python
 python:
     - "3.6"
@@ -9,9 +9,9 @@ before_install:
     - pip install -U pip
 install:
     - pip install -r requirements.txt
-    - pip install coveralls
+    - pip install codecov
 script:
-    - coverage run -m unittest discover -s ./tests
+    - coverage run --source=metronome -m unittest -v
     - coverage report -im
 after_success:
-    - coveralls
+    - codecov
