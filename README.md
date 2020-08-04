@@ -35,7 +35,7 @@ via port argument to app.run(port=port) call.
 ```python
 app.run(port=8080)
 ```
-After such a change Metronome will listen on port 8080.
+After such a change and a restart of the app Metronome will listen on port 8080.
 
 ## Metronome API
 Metronome currently exposes a single endpoint: /v1/models/cleaner
