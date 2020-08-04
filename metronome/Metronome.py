@@ -81,8 +81,8 @@ class Metronome5(Metronome):
 
         """
         all_values = []
-        for _, values in data.items():
-            all_values.append(values)
+        for var_name in config.NUMERIC_FEATURES:
+            all_values.append(data.pop(var_name))
 
         matrix = np.array(all_values).reshape((config.WINDOW_SIZE - 1, -1)).transpose()
         tensor = tf.convert_to_tensor(matrix)

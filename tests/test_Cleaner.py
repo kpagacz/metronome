@@ -18,7 +18,7 @@ class TestMetronome5(unittest.TestCase):
         self.many_cases_dict = {
             "var" + str(i) : \
                 np.random.uniform(low=0, high=350, size=4)  \
-            for i in range(config.WINDOW_SIZE - 1)
+                for i in range(config.WINDOW_SIZE - 1)
         }
 
         self.numeric_dict = {"numeric" : tf.convert_to_tensor([[[[ 71.61044579, 181.77008424, 176.40728705, 105.35931186,
@@ -39,7 +39,7 @@ class TestMetronome5(unittest.TestCase):
         res_dict = self.metronome._prepare_data(self.many_cases_dict)
 
         self.assertTupleEqual(
-            tuple1=(len(self.many_cases_dict["var0"]), config.WINDOW_SIZE - 1),
+            tuple1=(4, config.WINDOW_SIZE - 1),
             tuple2=tuple(res_dict["numeric"].shape)
         )
 
