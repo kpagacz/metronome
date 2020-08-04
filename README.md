@@ -30,8 +30,8 @@ Using the shell:
 python cleaner.py
 ```
 
-Once this command is ran Metronome listens on port 5000 on default for icoming HTTP calls. Default port can be modified in cleaner.py file:
-argument:
+Once this command is ran Metronome listens on port 5000 on default for icoming HTTP calls. Default port can be modified in cleaner.py file
+via port argument to app.run(port=<port>) call.
 ```python
 app.run(port=8080)
 ```
