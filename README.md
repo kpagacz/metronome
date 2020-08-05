@@ -13,9 +13,9 @@ Underneath the hood the predictions are handled by a tensorflow.keras neural net
 in Flask. Metronome currently does not have a production-grade hosting engine attached to it. The server packaged
 with the app is the one bundled with Flask - Werkzeug and it is not dedicated to production.
 
-The model itself predicts whether the 15th time point in a series of points in time belongs to an arbitrary temporal pattern
-present among those 15 points in time. The pattern is defined by a sequence of points in time separated by a constant 
-interval specified in input.
+The model itself predicts whether the 15th time point in a series of 15 points in time belongs to an arbitrary temporal pattern
+present among those 15 points. The pattern is defined by a sequence of points in time separated by a constant 
+interval specified by input.
 
 ## Metronome setup
 ### Requirements
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 ### Running
 Using the shell:
 ```bash
-python cleaner.py
+python metronome.py
 ```
 
 Once this command is ran Metronome listens on the default port 5000 for icoming HTTP calls. Default port can be modified in cleaner.py file
@@ -141,4 +141,8 @@ print(payload)
 ```
 
 Metronome does not perform any checks regarding validity of the input.
+
+
+## Examples
+I included some end to end examples of interacting with Metronome API.
 
