@@ -28,14 +28,15 @@ def clean():
     incoming_data = json.loads(incoming)
     logger.debug(incoming)
 
-    cleaner_type = incoming_data.pop("interval")
+    interval = incoming_data.pop("interval")
 
-    if(cleaner_type == 5):
+    if(type(interval) == int):
         model_output = {
-            "probabilities" : list(metronome_interval_5.predict_proba(incoming_data)),
-            "predictions" : list(metronome_interval_5.predict(incoming_data)),
+            "probabilities" : list(metronome_interval_5.predict_proba(incoming_data, interval)),
+            "predictions" : list(metronome_interval_5.predict(incoming_data, interval)),
         }
         return json.dumps(model_output, cls=NumpyEncoder)
+   
     else:
         return json.dumps({})
     

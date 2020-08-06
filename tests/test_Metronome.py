@@ -28,7 +28,7 @@ class TestMetronome5(unittest.TestCase):
 
 
     def test_prepare_data_simple_shape(self):
-        res_dict = self.metronome._prepare_data(self.simple_dict)
+        res_dict = self.metronome._prepare_data(self.simple_dict, interval=5)
 
         self.assertTupleEqual(
             tuple1=(1, config.WINDOW_SIZE - 1),
@@ -36,7 +36,7 @@ class TestMetronome5(unittest.TestCase):
         )
 
     def test_prepare_data_many_cases_shape(self):
-        res_dict = self.metronome._prepare_data(self.many_cases_dict)
+        res_dict = self.metronome._prepare_data(self.many_cases_dict, interval=5)
 
         self.assertTupleEqual(
             tuple1=(4, config.WINDOW_SIZE - 1),
@@ -56,33 +56,49 @@ class TestMetronome5(unittest.TestCase):
         self.assertAlmostEqual(res_proba, 1138.01330566406)
 
     def test_predict_proba_shape_one_case(self):
-        res_proba = self.metronome.predict_proba(self.simple_dict)
+        res_proba = self.metronome.predict_proba(self.simple_dict, interval=5)
         self.assertTupleEqual(
             res_proba.shape,
             (1, )
         )
 
     def test_predict_proba_shape_many_cases(self):
-        res_proba = self.metronome.predict_proba(self.many_cases_dict)
+        res_proba = self.metronome.predict_proba(self.many_cases_dict, interval=5)
         self.assertTupleEqual(
             res_proba.shape,
             (4, )
         )
 
     def test_predict_shape_one_case(self):
-        res_predictions = self.metronome.predict(self.simple_dict)
+        res_predictions = self.metronome.predict(self.simple_dict, interval=5)
         self.assertTupleEqual(
             res_predictions.shape,
             (1, )
         )
 
     def test_predict_shape_many_cases(self):
-        res_predictions = self.metronome.predict(self.many_cases_dict)
+        res_predictions = self.metronome.predict(self.many_cases_dict, interval=5)
         self.assertTupleEqual(
             res_predictions.shape,
             (4, )
         )
 
+    def test_prepare_data_different_interval(self):
+        interval_10 = dict(self.simple_dict)
+        for key, value in interval_10.items():
+            interval_10[key] = value * 2
+        
+        prepared_interval_5 = self.metronome._prepare_data(self.simple_dict, interval=5)
+        prepared_interval_10 = self.metronome._prepare_data(interval_10, interval=10)
+
+        self.assertTrue(
+            tf.reduce_all(
+                tf.equal(
+                    prepared_interval_5["numeric"],
+                    prepared_interval_10["numeric"]
+                )
+            )
+        )
 
 class testmetronomeBase(unittest.TestCase):
     def test_predict_proba_not_implemented(self):

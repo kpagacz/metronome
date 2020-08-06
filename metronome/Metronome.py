@@ -27,7 +27,7 @@ class Metronome5(Metronome):
         self.model = self.set_up_model()
         self._probabilities = None
 
-    def predict_proba(self, data: dict) -> np.ndarray:
+    def predict_proba(self, data: dict, interval: int) -> np.ndarray:
         """Returns model probability predictions.
 
         As a side-effects sets _probabilities output.
@@ -36,47 +36,53 @@ class Metronome5(Metronome):
             data (dict):
                 Dict with one key - "numeric" and 
                 tensor as its value.
+            interval (int):
+                Number of minutes designating the temporal pattern.
 
         Returns:
             np.ndarray:
                 Array of model probability predictions
 
         """
-        data = self._prepare_data(data)
+        data = self._prepare_data(data, interval)
         probabilities = np.array(tf.sigmoid(self.model.predict(data))).flatten()
         self._probabilities = probabilities
 
         return probabilities
         
-    def predict(self, data: dict) -> np.ndarray:
+    def predict(self, data: dict, interval: int) -> np.ndarray:
         """Returns model class predictions.
 
         Arguments:
             data (dict):
                 Dict with one key - "numeric" and 
                 tensor as its value.
+            interval (int):
+                Number of minutes designating the temporal pattern.
 
         Returns:
             np.ndarray:
                 Array of model class predictions.
 
         """
-        probas = self.predict_proba(data)
+        probas = self.predict_proba(data, interval)
         predictions = (probas > config.PREDICTIONS_THRESHOLD).astype(np.int64)
 
         return predictions
 
-    def _prepare_data(self, data: dict) -> dict:
+    def _prepare_data(self, data: dict, interval: int) -> dict:
         """Prepares data to input into the model
 
         Arguments:
             data (dict): 
                 Dictionary of variable - values pairs.
+            interval (int):
+                Number of minutes designating the temporal pattern.
 
         Returns:
             dict:
                 Dict with one key - "numeric" and value
-                tf.Tensor of shape (1, 1, <cases number>, <variables number>).
+                tf.Tensor of shape (<cases number>, 14).
                 This is the shape accepted by the keras model as input.
 
         """
@@ -85,6 +91,12 @@ class Metronome5(Metronome):
             all_values.append(data[var_name])
 
         matrix = np.array(all_values).reshape((config.WINDOW_SIZE - 1, -1)).transpose()
+
+        # Normalizing the input to 5 minutes, so model will work on
+        # other interval
+        coefficient = 5 / interval 
+        matrix = matrix * coefficient
+
         tensor = tf.convert_to_tensor(matrix)
         return_dict = {"numeric" : tensor}
 
