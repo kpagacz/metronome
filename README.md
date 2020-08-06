@@ -1,5 +1,5 @@
 # Metronome
-[![Build Status](https://travis-ci.org/kpagacz/glyculator-cleaner.svg?branch=app)](https://travis-ci.org/kpagacz/glyculator-cleaner)
+[![Build Status](https://travis-ci.org/kpagacz/metronome.svg?branch=app)](https://travis-ci.org/kpagacz/metronome)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c6147e4561478ec28b30/maintainability)](https://codeclimate.com/github/kpagacz/metronome/maintainability)
 [![codecov](https://codecov.io/gh/kpagacz/metronome/branch/app/graph/badge.svg)](https://codecov.io/gh/kpagacz/metronome)
 
@@ -49,7 +49,7 @@ It exposes a single resource at /v1/models/metronome/ expecting a POST HTTP requ
 The app does not perform any user input validation, so its app to the caller to make sure the calls
 follow the structure.
 
-### Minimal working example
+### Getting started
 Given Metronome runs on localhost:5000 port, one can use it in a following way:
 ```python
 import requests
@@ -144,5 +144,5 @@ Metronome does not perform any checks regarding validity of the input.
 
 
 ## Examples
-I included some end to end examples of interacting with Metronome API.
+I included some end to end examples of interacting with Metronome API in the [examples folder](https://github.com/kpagacz/metronome/tree/app/examples).
 
