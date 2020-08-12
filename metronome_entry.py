@@ -3,15 +3,16 @@ import numpy as np
 import json
 
 import logging
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # FATAL
+logging.getLogger('tensorflow').setLevel(logging.FATAL)
 
 from metronome.Metronome import Metronome5
 from utils.app_utils import NumpyEncoder
 
-# TO-DO (konrad.pagacz@gmail.com) expand docs - a solid readme is much needed
-# TO-DO (konrad.pagacz@gmail.com) add logging functionalities
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
 
 # Cleaner setup
 metronome_interval_5 = Metronome5()
@@ -41,4 +42,3 @@ def clean():
         return json.dumps({})
     
 
-app.run(port=5000)
