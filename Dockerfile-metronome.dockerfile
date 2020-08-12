@@ -12,4 +12,5 @@ RUN pip install -r requirements.txt
 # Copy application
 COPY . /srv/metronome
 
+EXPOSE 5000
 CMD uwsgi uwsgi-config.ini
