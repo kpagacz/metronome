@@ -34,8 +34,7 @@ class Metronome5(Metronome):
 
         Arguments:
             data (dict):
-                Dict with one key - "numeric" and 
-                tensor as its value.
+                Dictionary of variable - values pairs.
             interval (int):
                 Number of minutes designating the temporal pattern.
 
@@ -55,8 +54,7 @@ class Metronome5(Metronome):
 
         Arguments:
             data (dict):
-                Dict with one key - "numeric" and 
-                tensor as its value.
+                Dictionary of variable - values pairs.
             interval (int):
                 Number of minutes designating the temporal pattern.
 
