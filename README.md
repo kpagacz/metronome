@@ -11,7 +11,8 @@ and designated frequency it tries to fit the data into the pattern of time point
 
 Underneath the hood the predictions are handled by a tensorflow.keras neural network. The web engine is setup
 in Flask. Metronome currently does not have a production-grade hosting engine attached to it. The server packaged
-with the app is the one bundled with Flask - Werkzeug and it is not dedicated to production.
+with the app is the one bundled with Flask - Werkzeug and it is not dedicated to production. You will need to 
+setup a production grade web engine if you want to setup metronome in a busy traffick environment.
 
 The model itself predicts whether the 15th time point in a series of 15 points in time belongs to an arbitrary temporal pattern
 present among those 15 points. The pattern is defined by a sequence of points in time separated by a constant 
@@ -35,8 +36,8 @@ Using the shell:
 python metronome.py
 ```
 
-Once this command is ran Metronome listens on the default port 5000 for icoming HTTP calls. Default port can be modified in cleaner.py file
-via port argument to app.run(port=port) call.
+Once this command is ran, Metronome listens on the default port 5000 for incoming HTTP calls. The default port can be modified in the cleaner.py file
+via port argument to the app.run(port=port) call.
 ```python
 app.run(port=8080)
 ```
@@ -46,11 +47,11 @@ After such a change and a restart of the app Metronome will listen on port 8080.
 The Metronome API allows its users to access the model predictions and probabilities.
 
 It exposes a single resource at /v1/models/metronome/ expecting a POST HTTP request at this endpoint.
-The app does not perform any user input validation, so its app to the caller to make sure the calls
-follow the structure.
+The app does not perform any user input validation, so it's up to the caller to make sure the calls
+follow the required structure.
 
 ### Getting started
-Given Metronome runs on localhost:5000 port, one can use it in a following way:
+Given Metronome runs on the localhost:5000 port, one can use it in the following way:
 ```python
 import requests
 import json
